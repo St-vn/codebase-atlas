@@ -3,5 +3,38 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root { height: 100%; margin: 0; }
-body { background: #0F172A; color: #F8FAFC; font-family: 'Fira Sans', system-ui, sans-serif; }
+/*
+ * Codebase Atlas — dark dev-tool theme (from docs/design/DESIGN-SYSTEM.md).
+ * HSL vars consumed by tailwind.config.js. Dark-only for MVP; :root IS the dark theme.
+ */
+@layer base {
+  :root {
+    --background: 222 47% 11%;        /* #0F172A */
+    --foreground: 210 40% 98%;        /* #F8FAFC */
+    --card: 217 33% 17%;             /* #1E293B */
+    --card-foreground: 210 40% 98%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 20%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 30% 21%;            /* #272F42 */
+    --muted-foreground: 215 20% 55%; /* #64748B */
+    --accent: 142 71% 45%;          /* #22C55E */
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;       /* #EF4444 */
+    --destructive-foreground: 210 40% 98%;
+    --border: 215 25% 34%;          /* #475569 */
+    --input: 215 25% 34%;
+    --ring: 142 71% 45%;
+    --radius: 0.5rem;
+  }
+
+  * { @apply border-border; }
+  html, body, #root { height: 100%; margin: 0; }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Fira Sans', system-ui, sans-serif;
+  }
+}

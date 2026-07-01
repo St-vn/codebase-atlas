@@ -1,6 +1,8 @@
 import React, { useCallback } from 'react';
 import ReactFlow, {
   ReactFlowProvider,
+  Handle,
+  Position,
   type NodeTypes,
   type NodeProps,
   type Edge,
@@ -42,7 +44,9 @@ function CustomNode({ data }: NodeProps<CustomNodeData>) {
       }}
       onClick={() => data.onSelect(data.id)}
     >
+      <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
       {data.label}
+      <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
     </div>
   );
 }
