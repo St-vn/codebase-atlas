@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import httpx from '../fixtures/httpx.graph.json';
 import 'reactflow/dist/style.css';
+import './index.css';
 
 // MVP: loads the bundled httpx fixture so `npm run dev` shows a real graph.
 // Later: replace with a repo picker that runs GraphifyRunner to produce graph.json.

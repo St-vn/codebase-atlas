@@ -6,77 +6,36 @@ interface DetailPaneProps {
   onSelect: (id: string) => void;
 }
 
-const TOKENS = {
-  bg: '#1E293B',
-  text: '#F8FAFC',
-  border: '#475569',
-  mutedText: '#94A3B8',
-  neighborBg: '#0F172A',
-  neighborHover: '#334155',
+const ROLE_COLORS: Record<string, string> = {
+  entry: 'bg-role-entry',
+  module: 'bg-role-module',
+  interface: 'bg-role-interface',
+  method: 'bg-role-method',
+  leaf: 'bg-role-leaf',
 };
 
-const cardStyle: React.CSSProperties = {
-  backgroundColor: TOKENS.bg,
-  color: TOKENS.text,
-  border: `1px solid ${TOKENS.border}`,
-  borderRadius: '8px',
-  padding: '16px',
-  fontFamily: 'monospace',
-  fontSize: '14px',
-  minWidth: '240px',
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: '16px',
-  fontWeight: 'bold',
-  marginBottom: '8px',
-  color: TOKENS.text,
-};
-
-const metaRowStyle: React.CSSProperties = {
-  color: TOKENS.mutedText,
-  marginBottom: '4px',
-  fontSize: '12px',
-};
-
-const sectionTitleStyle: React.CSSProperties = {
-  color: TOKENS.mutedText,
-  fontSize: '11px',
-  textTransform: 'uppercase',
-  letterSpacing: '0.08em',
-  marginTop: '12px',
-  marginBottom: '6px',
-};
-
-const neighborButtonStyle: React.CSSProperties = {
-  display: 'block',
-  width: '100%',
-  textAlign: 'left',
-  backgroundColor: TOKENS.neighborBg,
-  color: TOKENS.text,
-  border: `1px solid ${TOKENS.border}`,
-  borderRadius: '4px',
-  padding: '6px 10px',
-  marginBottom: '4px',
-  cursor: 'pointer',
-  fontSize: '13px',
-  fontFamily: 'monospace',
-};
-
-const hintStyle: React.CSSProperties = {
-  ...cardStyle,
-  color: TOKENS.mutedText,
-  fontStyle: 'italic',
-};
+function getRoleDotClass(role: string): string {
+  // role values: 'entry-point', 'module', 'interface', 'method', 'leaf'
+  const key = role.replace('-point', '').split('-')[0];
+  return ROLE_COLORS[key] ?? 'bg-muted-foreground';
+}
 
 export function DetailPane({ model, focusId, onSelect }: DetailPaneProps) {
   if (focusId === null) {
-    return <div style={hintStyle}>Click a node to inspect it</div>;
+    return (
+      <div className="bg-card border border-border rounded-md p-4 font-sans text-sm text-muted-foreground italic min-w-[240px]">
+        Click a node to inspect it
+      </div>
+    );
   }
 
   const node = model.nodes.find((n) => n.id === focusId);
   if (!node) {
-    return <div style={hintStyle}>Click a node to inspect it</div>;
+    return (
+      <div className="bg-card border border-border rounded-md p-4 font-sans text-sm text-muted-foreground italic min-w-[240px]">
+        Click a node to inspect it
+      </div>
+    );
   }
 
   const neighborIds = new Set<string>();
@@ -87,28 +46,61 @@ export function DetailPane({ model, focusId, onSelect }: DetailPaneProps) {
   const neighbors = model.nodes.filter((n) => neighborIds.has(n.id));
 
   return (
-    <div style={cardStyle}>
-      <div style={labelStyle}>{node.label}</div>
-      <div style={metaRowStyle}>Role: {node.role}</div>
-      <div style={metaRowStyle}>File: {node.sourceFile}</div>
-      {node.sourceLocation && (
-        <div style={metaRowStyle}>Location: {node.sourceLocation}</div>
-      )}
-      <div style={metaRowStyle}>Fan-in: {node.fanIn} / Fan-out: {node.fanOut}</div>
+    <div className="bg-card border border-border rounded-md p-4 font-mono text-sm text-foreground min-w-[240px]">
+      {/* Node label */}
+      <div className="text-base font-semibold text-foreground mb-2 font-mono">
+        {node.label}
+      </div>
 
+      {/* Role badge */}
+      <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
+        <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${getRoleDotClass(node.role)}`} />
+        <span>Role: {node.role}</span>
+      </div>
+
+      {/* File */}
+      <div className="text-muted-foreground text-xs mb-1">
+        File: {node.sourceFile}
+      </div>
+
+      {/* Location */}
+      {node.sourceLocation && (
+        <div className="text-muted-foreground text-xs mb-1">
+          Location: {node.sourceLocation}
+        </div>
+      )}
+
+      {/* Fan stats */}
+      <div className="text-muted-foreground text-xs mb-1">
+        Fan-in: {node.fanIn} / Fan-out: {node.fanOut}
+      </div>
+
+      {/* Neighbors */}
       {neighbors.length > 0 && (
-        <>
-          <div style={sectionTitleStyle}>Neighbors ({neighbors.length})</div>
-          {neighbors.map((nb) => (
-            <button
-              key={nb.id}
-              style={neighborButtonStyle}
-              onClick={() => onSelect(nb.id)}
-            >
-              {nb.label}
-            </button>
-          ))}
-        </>
+        <div className="mt-3">
+          <div className="text-muted-foreground text-[11px] uppercase tracking-widest mb-1.5">
+            Neighbors ({neighbors.length})
+          </div>
+          <div className="flex flex-col gap-1">
+            {neighbors.map((nb) => (
+              <button
+                key={nb.id}
+                onClick={() => onSelect(nb.id)}
+                className="
+                  block w-full text-left
+                  text-foreground font-mono text-[13px]
+                  bg-background border border-border rounded
+                  px-2 py-1
+                  cursor-pointer
+                  hover:bg-muted
+                  transition-colors duration-150
+                "
+              >
+                {nb.label}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

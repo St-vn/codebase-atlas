@@ -5,55 +5,22 @@ interface ShellProps {
   paneChildren?: ReactNode;
 }
 
-const tokens = {
-  background: '#0F172A',
-  card: '#1E293B',
-  border: '#475569',
-  foreground: '#F8FAFC',
-  mutedForeground: '#64748B',
-} as const;
-
 export function Shell({ canvasChildren, paneChildren }: ShellProps) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'row',
-        minHeight: '100dvh',
-        background: tokens.background,
-        color: tokens.foreground,
-      }}
-    >
+    <div className="flex flex-row min-h-dvh bg-background text-foreground">
       <div
         data-testid="graph-canvas"
-        style={{
-          flex: 1,
-          overflow: 'hidden',
-        }}
+        className="flex-1 overflow-hidden"
       >
         {canvasChildren}
       </div>
 
       <div
         data-testid="detail-pane"
-        style={{
-          width: '360px',
-          flexShrink: 0,
-          background: tokens.card,
-          borderLeft: `1px solid ${tokens.border}`,
-          overflow: 'auto',
-        }}
+        className="w-[360px] shrink-0 bg-card border-l border-border overflow-auto"
       >
         {paneChildren ?? (
-          <p
-            style={{
-              color: tokens.mutedForeground,
-              fontSize: '14px',
-              padding: '16px',
-              margin: 0,
-              fontFamily: 'sans-serif',
-            }}
-          >
+          <p className="text-muted-foreground text-sm font-sans p-4 m-0">
             Click a node to inspect
           </p>
         )}
