@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, beforeAll } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { GraphCanvas } from './GraphCanvas';
 
 beforeAll(() => {
@@ -59,5 +59,30 @@ describe('GraphCanvas — blast-radius (US-009, USABILITY-002)', () => {
     render(<GraphCanvas model={model} mountedIds={new Set(['a','b'])} combinedOpacity={new Map([['a',1],['b',1]])} matchScores={new Map()} blastRadius={blast} onSelect={()=>{}} />);
     const edge = screen.queryByTestId(/rf-edge-b-a|rf-edge-/);
     if (edge) expect(edge.className).toMatch(/blast-edge/);
+  });
+});
+
+const clusterModel = {
+  nodes: [{id:'a',label:'a',role:'module'},{id:'b',label:'b',role:'module'},{id:'c',label:'c',role:'leaf'}],
+  edges: [{source:'a',target:'c',relation:'calls'},{source:'b',target:'c',relation:'calls'}],
+} as any;
+
+describe('GraphCanvas — shift-click cluster focus (US-010, contract §12, F8)', () => {
+  it('shift-click on two nodes fires onSelectCluster with the seed set', () => {
+    const onSelectCluster = vi.fn();
+    render(<GraphCanvas model={clusterModel} mountedIds={new Set(['a','b','c'])} combinedOpacity={new Map([['a',1],['b',1],['c',1]])} matchScores={new Map()} onSelect={()=>{}} onSelectCluster={onSelectCluster} />);
+    fireEvent.click(screen.getByTestId('rf-node-a'), { shiftKey: true });
+    fireEvent.click(screen.getByTestId('rf-node-b'), { shiftKey: true });
+    expect(onSelectCluster).toHaveBeenLastCalledWith(expect.any(Set));
+    const set = onSelectCluster.mock.calls.at(-1)![0] as Set<string>;
+    expect(set.has('a')).toBe(true);
+    expect(set.has('b')).toBe(true);
+    expect(set.size).toBe(2);
+  });
+  it('plain click does NOT add to the cluster (no shift)', () => {
+    const onSelectCluster = vi.fn();
+    render(<GraphCanvas model={clusterModel} mountedIds={new Set(['a','b','c'])} combinedOpacity={new Map()} matchScores={new Map()} onSelect={()=>{}} onSelectCluster={onSelectCluster} />);
+    fireEvent.click(screen.getByTestId('rf-node-a'));
+    expect(onSelectCluster).not.toHaveBeenCalled();
   });
 });

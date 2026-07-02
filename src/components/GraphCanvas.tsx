@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import ReactFlow, {
   ReactFlowProvider,
   Handle,
@@ -68,6 +68,7 @@ interface GraphCanvasProps {
   combinedOpacity?: Map<string, number>;
   blastRadius?: BlastRadius;
   onSelect: (id: string) => void;
+  onSelectCluster?: (ids: Set<string>) => void;
 }
 
 const NODE_WIDTH = 120;
@@ -94,12 +95,19 @@ function computeDagreLayout(
   );
 }
 
-export function GraphCanvas({ model, mountedIds, matchScores, combinedOpacity, blastRadius, onSelect }: GraphCanvasProps) {
+export function GraphCanvas({ model, mountedIds, matchScores, combinedOpacity, blastRadius, onSelect, onSelectCluster }: GraphCanvasProps) {
+  const clusterSetRef = useRef<Set<string>>(new Set());
+
   const onNodeClick = useCallback(
-    (_event: React.MouseEvent, node: { id: string }) => {
-      onSelect(node.id);
+    (event: React.MouseEvent, node: { id: string }) => {
+      if (event.shiftKey && onSelectCluster) {
+        clusterSetRef.current.add(node.id);
+        onSelectCluster(new Set(clusterSetRef.current));
+      } else {
+        onSelect(node.id);
+      }
     },
-    [onSelect],
+    [onSelect, onSelectCluster],
   );
 
   // Build sets for fast blast-radius lookups
