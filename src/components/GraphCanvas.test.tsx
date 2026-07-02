@@ -27,3 +27,20 @@ describe('GraphCanvas', () => {
     expect(node.closest('[style*="opacity"]') || node).toBeTruthy();
   });
 });
+
+const model = { nodes: [{id:'a',label:'a.py',role:'module'},{id:'b',label:'b.py',role:'leaf'}], edges: [] } as any;
+
+describe('GraphCanvas — combinedOpacity (US-008, contract §7 phase-2)', () => {
+  it('applies combinedOpacity to node style, not matchScores directly', () => {
+    const combinedOpacity = new Map([['a',1],['b',0.25]]);
+    render(<GraphCanvas model={model} mountedIds={new Set(['a','b'])} combinedOpacity={combinedOpacity} matchScores={new Map()} onSelect={()=>{}} />);
+    const b = screen.getByTestId('rf-node-b');
+    expect((b.style.opacity || getComputedStyle(b).opacity)).toMatch(/0\.2[0-9]*/);
+  });
+  it('focus does not expand the mount set beyond mountedIds', () => {
+    const full = { ...model, nodes: Array.from({length:1000},(_,i)=>({id:String(i),label:`${i}.py`,role:'leaf'})) };
+    const combinedOpacity = new Map(Array.from({length:1000},(_,i)=>[String(i),1]));
+    render(<GraphCanvas model={full} mountedIds={new Set(['0','1'])} combinedOpacity={combinedOpacity} matchScores={new Map()} onSelect={()=>{}} />);
+    expect(screen.getAllByTestId(/rf-node-/).length).toBe(2); // still capped
+  });
+});

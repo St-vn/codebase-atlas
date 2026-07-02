@@ -59,6 +59,7 @@ interface GraphCanvasProps {
   model: TypedGraphModel;
   mountedIds: Set<string>;
   matchScores: Map<string, number>;
+  combinedOpacity?: Map<string, number>;
   onSelect: (id: string) => void;
 }
 
@@ -86,7 +87,7 @@ function computeDagreLayout(
   );
 }
 
-export function GraphCanvas({ model, mountedIds, matchScores, onSelect }: GraphCanvasProps) {
+export function GraphCanvas({ model, mountedIds, matchScores, combinedOpacity, onSelect }: GraphCanvasProps) {
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: { id: string }) => {
       onSelect(node.id);
@@ -126,7 +127,7 @@ export function GraphCanvas({ model, mountedIds, matchScores, onSelect }: GraphC
           id: n.id,
           label: n.label,
           role: n.role,
-          opacity: matchScores.get(n.id) ?? 1,
+          opacity: combinedOpacity?.get(n.id) ?? matchScores.get(n.id) ?? 1,
           onSelect,
         },
       };
