@@ -12,9 +12,9 @@
   "iconLibrary": "lucide",
   "rtl": false,
   "aliases": {
-    "components": "src/components",
-    "utils": "src/lib/utils",
-    "ui": "src/components/ui"
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui"
   },
   "menuColor": "default",
   "menuAccent": "subtle",
