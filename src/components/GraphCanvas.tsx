@@ -10,6 +10,7 @@ import ReactFlow, {
 import dagre from 'dagre';
 import type { TypedGraphModel } from '../core/typedGraphModel';
 import type { NodeRole } from '../core/nodeTyper';
+import type { BlastRadius } from '../adapters/blastRadiusClient';
 
 const ROLE_COLORS: Record<NodeRole, string> = {
   'entry-point': '#E69F00',
@@ -24,6 +25,7 @@ interface CustomNodeData {
   label: string;
   role: NodeRole;
   opacity: number;
+  blastRing: boolean;
   onSelect: (id: string) => void;
 }
 
@@ -31,6 +33,7 @@ function CustomNode({ data }: NodeProps<CustomNodeData>) {
   return (
     <div
       data-testid={`rf-node-${data.id}`}
+      className={data.blastRing ? 'blast-ring' : undefined}
       style={{
         background: ROLE_COLORS[data.role] ?? '#94A3B8',
         opacity: data.opacity,
@@ -41,6 +44,9 @@ function CustomNode({ data }: NodeProps<CustomNodeData>) {
         cursor: 'pointer',
         minWidth: 80,
         textAlign: 'center',
+        ...(data.blastRing
+          ? { boxShadow: '0 0 0 2px var(--accent, #22C55E), 0 0 0 4px var(--ring, #22C55E)' }
+          : {}),
       }}
       onClick={() => data.onSelect(data.id)}
     >
@@ -60,6 +66,7 @@ interface GraphCanvasProps {
   mountedIds: Set<string>;
   matchScores: Map<string, number>;
   combinedOpacity?: Map<string, number>;
+  blastRadius?: BlastRadius;
   onSelect: (id: string) => void;
 }
 
@@ -87,7 +94,7 @@ function computeDagreLayout(
   );
 }
 
-export function GraphCanvas({ model, mountedIds, matchScores, combinedOpacity, onSelect }: GraphCanvasProps) {
+export function GraphCanvas({ model, mountedIds, matchScores, combinedOpacity, blastRadius, onSelect }: GraphCanvasProps) {
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: { id: string }) => {
       onSelect(node.id);
@@ -95,15 +102,27 @@ export function GraphCanvas({ model, mountedIds, matchScores, combinedOpacity, o
     [onSelect],
   );
 
+  // Build sets for fast blast-radius lookups
+  const blastImpactedSet = new Set(blastRadius?.impactedIds ?? []);
+  const blastEdgeSet = new Set(
+    (blastRadius?.impactEdges ?? []).map((e) => `${e.source}::${e.target}`),
+  );
+
   // Build edges where both endpoints are mounted
   const rfEdges: Edge[] = model.edges
     .filter((e) => mountedIds.has(e.source) && mountedIds.has(e.target))
-    .map((e, idx) => ({
-      id: `e-${e.source}-${e.target}-${idx}`,
-      source: e.source,
-      target: e.target,
-      style: { stroke: '#475569', strokeWidth: 1 },
-    }));
+    .map((e, idx) => {
+      const isBlastEdge = blastEdgeSet.has(`${e.source}::${e.target}`);
+      return {
+        id: `e-${e.source}-${e.target}-${idx}`,
+        source: e.source,
+        target: e.target,
+        className: isBlastEdge ? 'blast-edge' : undefined,
+        style: isBlastEdge
+          ? { stroke: 'var(--accent, #22C55E)', strokeWidth: 3 }
+          : { stroke: '#475569', strokeWidth: 1 },
+      };
+    });
 
   // Compute dagre positions for mounted nodes
   const mountedNodeIds = model.nodes
@@ -128,6 +147,7 @@ export function GraphCanvas({ model, mountedIds, matchScores, combinedOpacity, o
           label: n.label,
           role: n.role,
           opacity: combinedOpacity?.get(n.id) ?? matchScores.get(n.id) ?? 1,
+          blastRing: blastImpactedSet.has(n.id),
           onSelect,
         },
       };

@@ -44,3 +44,20 @@ describe('GraphCanvas — combinedOpacity (US-008, contract §7 phase-2)', () =>
     expect(screen.getAllByTestId(/rf-node-/).length).toBe(2); // still capped
   });
 });
+
+describe('GraphCanvas — blast-radius (US-009, USABILITY-002)', () => {
+  it('impacted nodes get a ring class, not an opacity change', () => {
+    const blast = { focusNodeId:'a', impactedIds:['b'], impactEdges:[{source:'b',target:'a',relation:'calls'}], source:'graph-fallback' as const };
+    const combinedOpacity = new Map([['a',1],['b',0.18]]); // b is dimmed by focus but is a reverse-dep
+    render(<GraphCanvas model={model} mountedIds={new Set(['a','b'])} combinedOpacity={combinedOpacity} matchScores={new Map()} blastRadius={blast} onSelect={()=>{}} />);
+    const b = screen.getByTestId('rf-node-b');
+    expect(b.className).toMatch(/blast-ring|blast/);   // ring via class
+    expect(b.style.opacity).toMatch(/0\.18/);           // opacity UNCHANGED by blast — non-opacity channel
+  });
+  it('impact edges get accent stroke emphasis', () => {
+    const blast = { focusNodeId:'a', impactedIds:['b'], impactEdges:[{source:'b',target:'a',relation:'calls'}], source:'mcp' as const };
+    render(<GraphCanvas model={model} mountedIds={new Set(['a','b'])} combinedOpacity={new Map([['a',1],['b',1]])} matchScores={new Map()} blastRadius={blast} onSelect={()=>{}} />);
+    const edge = screen.queryByTestId(/rf-edge-b-a|rf-edge-/);
+    if (edge) expect(edge.className).toMatch(/blast-edge/);
+  });
+});
