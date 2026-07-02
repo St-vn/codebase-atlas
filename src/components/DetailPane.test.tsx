@@ -27,3 +27,28 @@ describe('DetailPane', () => {
     expect(screen.getByText(/click a node/i)).toBeInTheDocument();
   });
 });
+
+const modelBlast = { nodes:[{id:'a',label:'a.py',sourceFile:'a.py',role:'module'}], edges:[] } as any;
+
+describe('DetailPane — blast-radius provenance (AVAIL-002, F7 leaf case, F15 placement)', () => {
+  it('shows MCP source badge when blast came from MCP', () => {
+    render(<DetailPane model={modelBlast} focusId="a" onSelect={()=>{}} blastRadius={{focusNodeId:'a',impactedIds:[],impactEdges:[],source:'mcp'}} />);
+    expect(screen.getByText(/mcp/i)).toBeInTheDocument();
+  });
+  it('shows fallback badge when blast came from graph-fallback', () => {
+    render(<DetailPane model={modelBlast} focusId="a" onSelect={()=>{}} blastRadius={{focusNodeId:'a',impactedIds:[],impactEdges:[],source:'graph-fallback'}} />);
+    expect(screen.getByText(/fallback|graph/i)).toBeInTheDocument();
+  });
+  it('lists impacted (reverse-dep) nodes in the pane', () => {
+    const model2 = { nodes:[{id:'a',label:'a.py',sourceFile:'a.py',role:'module'},{id:'b',label:'b.py',sourceFile:'b.py',role:'leaf'}], edges:[{source:'b',target:'a',relation:'calls'}] } as any;
+    render(<DetailPane model={model2} focusId="a" onSelect={()=>{}} blastRadius={{focusNodeId:'a',impactedIds:['b'],impactEdges:[{source:'b',target:'a',relation:'calls'}],source:'graph-fallback'}} />);
+    expect(screen.getAllByText('b.py').length).toBeGreaterThan(0);
+  });
+  it('F7: leaf node (zero dependents) — shows "No upstream dependents" + provenance badge, no crash', () => {
+    const modelLeaf = { nodes:[{id:'a',label:'leaf.py',sourceFile:'leaf.py',role:'leaf'}], edges:[] } as any;
+    render(<DetailPane model={modelLeaf} focusId="a" onSelect={()=>{}} blastRadius={{focusNodeId:'a',impactedIds:[],impactEdges:[],source:'graph-fallback'}} />);
+    expect(screen.getByText(/no upstream dependents/i)).toBeInTheDocument();
+    // Provenance badge is still shown (honest AVAIL-002).
+    expect(screen.getByText(/fallback|graph/i)).toBeInTheDocument();
+  });
+});

@@ -1,9 +1,12 @@
 import type { TypedGraphModel } from '../core/typedGraphModel';
+import type { BlastRadius } from '../adapters/blastRadiusClient';
+import { Badge } from '@/components/ui/badge';
 
 interface DetailPaneProps {
   model: TypedGraphModel;
   focusId: string | null;
   onSelect: (id: string) => void;
+  blastRadius?: BlastRadius;
 }
 
 const ROLE_COLORS: Record<string, string> = {
@@ -20,7 +23,7 @@ function getRoleDotClass(role: string): string {
   return ROLE_COLORS[key] ?? 'bg-muted-foreground';
 }
 
-export function DetailPane({ model, focusId, onSelect }: DetailPaneProps) {
+export function DetailPane({ model, focusId, onSelect, blastRadius }: DetailPaneProps) {
   if (focusId === null) {
     return (
       <div className="bg-card border border-border rounded-md p-4 font-sans text-sm text-muted-foreground italic min-w-[240px]">
@@ -100,6 +103,55 @@ export function DetailPane({ model, focusId, onSelect }: DetailPaneProps) {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Blast-radius section (F15 interim placement; moves to code tab in P3) */}
+      {blastRadius && (
+        <div className="mt-3 border-t border-border pt-3">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="text-muted-foreground text-[11px] uppercase tracking-widest">
+              Blast Radius
+            </div>
+            {blastRadius.source === 'mcp' ? (
+              <Badge variant="secondary" className="bg-accent text-accent-foreground">
+                MCP
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="bg-muted text-muted-foreground">
+                graph fallback
+              </Badge>
+            )}
+          </div>
+          {blastRadius.impactedIds.length === 0 ? (
+            <div className="text-muted-foreground text-xs italic">
+              No upstream dependents
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {blastRadius.impactedIds.map((impactedId) => {
+                const impactedNode = model.nodes.find((n) => n.id === impactedId);
+                const label = impactedNode?.label ?? impactedId;
+                return (
+                  <button
+                    key={impactedId}
+                    onClick={() => onSelect(impactedId)}
+                    className="
+                      block w-full text-left
+                      text-foreground font-mono text-[13px]
+                      bg-background border border-border rounded
+                      px-2 py-1
+                      cursor-pointer
+                      hover:bg-muted
+                      transition-colors duration-150
+                    "
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
