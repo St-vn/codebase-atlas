@@ -71,3 +71,24 @@ describe('computeFocusScores (US-008 gradient, contract §10)', () => {
     expect(p95).toBeLessThan(100); // PERF-004 bound (ms)
   });
 });
+
+describe('computeFocusScores — cluster seed (US-010, contract §12, F8)', () => {
+  const model = {
+    nodes: [{id:'s1',label:'s1',sourceFile:'',sourceLocation:null,community:0,role:'module',fanIn:0,fanOut:0},
+            {id:'s2',label:'s2',sourceFile:'',sourceLocation:null,community:0,role:'module',fanIn:0,fanOut:0},
+            {id:'n',label:'n',sourceFile:'',sourceLocation:null,community:0,role:'leaf',fanIn:0,fanOut:0},
+            {id:'far',label:'far',sourceFile:'',sourceLocation:null,community:0,role:'leaf',fanIn:0,fanOut:0}],
+    edges: [{source:'s1',target:'n',relation:'calls'},{source:'s2',target:'n',relation:'calls'},{source:'n',target:'far',relation:'calls'}],
+  } as any;
+  it('union of BFS distances from multiple seeds', () => {
+    const s = computeFocusScores(model, new Set(['s1','s2']), new Set(['s1','s2','n','far']), { maxDist: 2 });
+    expect(s.get('s1')).toBe(1); expect(s.get('s2')).toBe(1);
+    expect(s.get('n')).toBeGreaterThan(s.get('far')!); // n is dist 1 from a seed; far is dist 2
+  });
+  it('cluster BFS distance = min over seeds (contract §12)', () => {
+    // n is dist 1 from s1 AND dist 1 from s2 — min = 1, not 2.
+    // Score for n (dist=1) must exceed score for far (dist=2), proving min-over-seeds is used.
+    const s = computeFocusScores(model, new Set(['s1','s2']), new Set(['s1','s2','n','far']), { maxDist: 2 });
+    expect(s.get('n')).toBeGreaterThan(s.get('far')!); // strictly nearer than far (dist 2)
+  });
+});
