@@ -2,7 +2,8 @@
 type: internal-doc
 tags: [docs-internal, design, codebase-atlas]
 date_updated: 2026-07-01
-status: spec-draft
+status: design-complete
+status_detail: MVP (P0+P1) shipped. P2-P5 designed + /audit-spec verified. Ready for /implement.
 ---
 
 # Codebase Atlas — Spec
